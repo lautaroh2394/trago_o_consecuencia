@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:trago_o_consecuencia/MazoModel.dart';
 
 class GameScreen extends StatefulWidget {
   static String route = "/GameScreen";
@@ -9,12 +10,15 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> {
-  final List<String> desafios = [
+  final List<dynamic> desafios = MazoCollectionModel.getInstance().selected.desafios;
+  /*
+  [
     "Hacé la vertical por 5 segundos",
     "Hacé 20 flexiones de brazo en menos de 30 segundos",
     "Pensá en un nro del 1 al 10. Si alguno de los presentes acierta, bebés",
     "Piedra, papel o tijera con la persona al lado tuyo. Si perdés, bebés"
   ];
+   */
 
   String desafioActual;
   final _randomizador = Random();

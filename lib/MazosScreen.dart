@@ -40,7 +40,12 @@ class _MazosScreenState extends State<MazosScreen>{
                 )
             ),
             GestureDetector(
-                onTap: ()=>{this.navigateTo(ruta,args: MazoCollectionModel.getInstance().get(nombreMazo))},
+                onTap: (){
+                  print("tapped mazo");
+                  //this.navigateTo(ruta,args: MazoCollectionModel.getInstance().get(nombreMazo));
+                  this.navigateTo(ruta,args: nombreMazo);
+                  print("tap end");
+                },
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 20),
                   child: Icon(Icons.border_color),
@@ -69,7 +74,7 @@ class _MazosScreenState extends State<MazosScreen>{
           actions: <Widget>[
             IconButton(
               icon: const Icon(Icons.add),
-              onPressed: () => navigateTo(MazoEditScreen.route, args: MazoCollectionModel.getInstance().nuevoMazo()),
+              onPressed: () => navigateTo(MazoEditScreen.route, args: MazoCollectionModel.getInstance().nuevoMazo().nombre),
             ),
           ],
         ),

@@ -1,6 +1,5 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:trago_o_consecuencia/FileCreators.dart';
+import 'package:trago_o_consecuencia/FileManager.dart';
 import 'package:trago_o_consecuencia/MazoModel.dart';
 import 'HomeScreen.dart';
 
@@ -20,7 +19,7 @@ class _LoadScreenState extends State<LoadScreen>{
 
   Future<void> loadMazos() async {
     await DefaultCreator.checkSaved(context);
-    await (MazoCollectionModel.getInstance()).init(); //TODO
+    await (MazoCollectionModel.getInstance()).init();
     Navigator.pushNamed(context, HomeScreen.route);
   }
 

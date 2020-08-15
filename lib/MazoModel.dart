@@ -1,10 +1,10 @@
-import 'package:flutter/widgets.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:trago_o_consecuencia/FileCreators.dart';
-import 'ArchivosIniciales.dart';
-import 'dart:io';
 import 'dart:convert';
+
+import 'package:flutter/widgets.dart';
+//import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:trago_o_consecuencia/FileManager.dart';
+//import 'dart:convert';
 
 class MazoCollectionModel extends ChangeNotifier{
   static MazoCollectionModel _instance = null;
@@ -12,13 +12,8 @@ class MazoCollectionModel extends ChangeNotifier{
   List<String> get mazosNombres => _mazosInstanciados.map((e) => e.nombre).toList();
   String _mazoElegido;
   List<Mazo> _mazosInstanciados = [];
-  /*
-  List<Mazo> _mazosInstanciados = [
-    Mazo("Mazo1", desafios: ["desafio1","desafio2"]),
-    Mazo("Mazo2", desafios: ["desafio3","desafio4"]),
-  ];
-  */
   SharedPreferences _sp;
+  SharedPreferences get sp => _sp;
 
   static MazoCollectionModel getInstance(){
     if (_instance == null){
@@ -29,48 +24,30 @@ class MazoCollectionModel extends ChangeNotifier{
 
   Future<void> init() async{
     _sp = await SharedPreferences.getInstance();
-    //TODO: Instanciar mazos
-  }
-  void notificar(){
-    notifyListeners();
-  }
-
-  SharedPreferences get sp => _sp;
-
-  void cargarMazos() async{
     print("Cargando mazos...");
-    final directory = await getApplicationDocumentsDirectory();
-    List<String> files = _sp.get("MazosJSONS");
-    files.forEach((fileName) async {
-      File file = await File('${directory.path}/$fileName');
-      String jsonstring = await file.readAsString();
-      var jsondata = json.decode(jsonstring);
-      Mazo m = Mazo(jsondata["nombre"],desafios:jsondata["desafios"]);
-      _mazosInstanciados.add(m);
-      //Instanciar mazo desde el json {fileName} y agregarlo a _mazosInstanciados
+    List<dynamic> files = _sp.getStringList("MazosJSONS");
+    await Future.forEach(files, (fileName) async {
+      try{
+        var jsondata = await FileManager.LoadContentAsJson(fileName);
+        Mazo m = Mazo(jsondata["nombre"],desafios:jsondata["desafios"]);
+        _mazosInstanciados.add(m);
+      }
+      catch(err){
+        print("Error al cargar mazo ${fileName}; Error: $err");
+      }
     });
     print("Mazos cargados: ${_mazosInstanciados.map((e) => e.nombre).toList().toString()}");
-    //Verificar que el mazo seleccionado exista y esté instanciado. Si no existe, cambiarlo al primero de la lista
+    //TODO: Verificar que el mazo seleccionado exista y esté instanciado. Si no existe, cambiarlo al primero de la lista
   }
 
-  Future crearArchivo(jsondata) async{
-    var jsonstring = jsondata.toString();
-    var filename = jsondata["nombre"] + ".json";
-    final directory = await getApplicationDocumentsDirectory();
-    File file = await File('${directory.path}/$filename');
-    await file.writeAsString(jsondata);
-    return filename;
-  }
-
-  List<String> getFileNames(){
-    //TODO: Mover logica de generacion de nombre a DefaultCreator
-    return _mazosInstanciados.map((Mazo m) => m.nombre + ".json").toList();
+  void notificar(){
+    notifyListeners();
   }
 
   Mazo get(String nombre){
     num pos = _mazosInstanciados.indexWhere((element) => element.nombre == nombre);
     if (pos > -1) { return _mazosInstanciados[pos]; }
-    //TODO Contemplar caso que no existe
+    return null;
   }
 
   Mazo nuevoMazo(){
@@ -91,6 +68,7 @@ class MazoCollectionModel extends ChangeNotifier{
     num pos = _mazosInstanciados.indexWhere((element) => element.nombre == nombre);
     if (pos == -1){ print("No existe el mazo"); return;}
     _mazosInstanciados.removeAt(pos);
+    FileManager.Delete(fileName: nombre);
     notifyListeners();
   }
 
@@ -101,24 +79,24 @@ class MazoCollectionModel extends ChangeNotifier{
   }
 
   bool repetido(string){
-    return mazosNombres.where((element) => element == string).toList().length > 0;
+    return mazosNombres.where((element) => element == string).toList().length > 1;
   }
 
   void resetAll() async{
     print("resetall");
-    _mazosInstanciados.forEach((mazo) { deleteMazo(mazo.nombre);});
-    await _sp.setBool("firstTime", false);
+    _mazosInstanciados.toList().forEach((mazo) { deleteMazo(mazo.nombre);});
+    await _sp.setBool("firstTime", true);
     (await DefaultCreator.getAllFilePaths()).forEach((path) async{
+      print("deleting $path");
       if (path.contains(DefaultCreator.NAMEEXT)){
-        print("borrando $path");
-        await (await File(path)).delete();
+        await FileManager.Delete(path: path);
       }
     });
   }
 }
 
 class Mazo extends ChangeNotifier{
-  List<String> desafios = [];
+  List<dynamic> desafios = [];
   List<String> _desafiosActualizados = [];
 
   String nombre;
@@ -128,18 +106,17 @@ class Mazo extends ChangeNotifier{
     this.desafios = (desafios != Null) ? desafios : [];
   }
 
-  void guardar(nombre){
+  void guardar(nombre) async {
+    var nomAnterior = this.nombre;
     if (this.nombre != nombre){
       this.nombre = nombre;
     }
-
-    /*
-    TODO: crear archivo Json con la estructura:
-    {
-      nombre: this.nombre,
-      desafios: this.desafios
-    }
-     */
+    String _nombre = await FileManager.Save(this,nomAnterior); //TODO: Manejar error
+    //TODO: MEJORAR CODIGO
+    var _sp = await SharedPreferences.getInstance();
+    List<dynamic> files = _sp.getStringList("MazosJSONS");
+    files.add(_nombre);
+    _sp.setStringList("MazosJSONS", files);
     notifyListeners();
   }
 
@@ -184,5 +161,13 @@ class Mazo extends ChangeNotifier{
       //TODO: En realidad no sería posible que cayera en esta casuistica, o sí?
     }
     notifyListeners();
+  }
+
+  @override
+  String toString(){
+    return json.encode({
+      "nombre":this.nombre,
+      "desafios": this.desafios
+    });
   }
 }

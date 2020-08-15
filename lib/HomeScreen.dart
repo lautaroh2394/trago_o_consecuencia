@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:trago_o_consecuencia/FileCreators.dart';
+import 'package:trago_o_consecuencia/FileManager.dart';
 import 'package:trago_o_consecuencia/MazoModel.dart';
 
 import 'GameScreen.dart';

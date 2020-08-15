@@ -14,12 +14,10 @@ class _MazoEditScreenState extends State<MazoEditScreen>{
     nombreDelMazo = TextEditingController();
   }
 
-  //final mazodummy = MazoCollectionModel.getInstance().nuevoMazo("mazo de prueba");
-
   Map<String, TextEditingController> controladores = {};
   void navigateTo(ruta) => Navigator.pushNamed(context, ruta);
   TextEditingController nombreDelMazo;
-  //Mazo mazo;
+
   final BoxDecoration defaultButtonDeco = BoxDecoration(
     color: Colors.deepPurpleAccent,
     borderRadius: const BorderRadius.all(const Radius.circular(20)),
@@ -68,32 +66,7 @@ class _MazoEditScreenState extends State<MazoEditScreen>{
       children: <Widget>[
         TextField(
             controller: nombreDelMazo..text = mazo.nombre,
-            /*
-          onChanged: (text) => {
-            mazo.guardar(text)
-          },
-          */
           ),
-        /*
-        Container(
-          decoration: BoxDecoration(border: Border(
-          bottom: BorderSide(
-              color: MazoCollectionModel.getInstance().repetido(nombreDelMazo.text) ? Colors.red : Colors.green
-          )
-          )),
-          child: Consumer<Mazo>(
-            builder: (context, _, __){
-              return TextField(
-                controller: nombreDelMazo..text = mazo.nombre,
-                /*
-                    onChanged: (text) => {
-                      mazo.guardar(text)
-                    },
-                    */
-                );
-            },
-          )
-        ),*/
         Expanded(
           flex: 1,
           child: Consumer<Mazo>(
@@ -113,7 +86,7 @@ class _MazoEditScreenState extends State<MazoEditScreen>{
       //Es nombre repetido.
       print("repetido");
       //TODO:fix
-      Scaffold.of(context).showSnackBar(SnackBar(content: Text("No pueden haber mazos con el mismo nombre"),));
+      //Scaffold.of(context).showSnackBar(SnackBar(content: Text("No pueden haber mazos con el mismo nombre"),));
       return;
     }
     mazo.nombre = nombreDelMazo.text;
@@ -130,7 +103,7 @@ class _MazoEditScreenState extends State<MazoEditScreen>{
 
   @override
   Widget build(BuildContext context) {
-    final Mazo mazo = ModalRoute.of(context).settings.arguments;
+    final Mazo mazo = MazoCollectionModel.getInstance().get(ModalRoute.of(context).settings.arguments); //No se puede pasar una instancia de Mazo?
     return ChangeNotifierProvider.value(
         value: mazo,
         child: Scaffold(
